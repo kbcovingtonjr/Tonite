@@ -10,4 +10,17 @@
     <string name="location_permission_denied">We need to know where to look for events around you...</string>
     <string name="permission_required_toast">We need to know where to look for events around you...</string>
     <string name="permission_rationale_location">We need to know where to look for events around you.</string>
+    <string name="title_activity_user_add_event">Make an Event</string>
+    <string name="large_text">
+        "This is where a user can add his/her own event.\n"
+
+        "Maybe a user is throwing a party that's open to similar people.\n\n"
+        "Fill Out Data Fields: \n"
+        "\t Location (current location?).\n"
+        "\t Event name.\n"
+        "\t Type of event.\n\n"
+        "Options: \n"
+        "\t Invite friends to party.\n"
+        "\t Invite friends to party.\n"
+    </string>
 </resources>
