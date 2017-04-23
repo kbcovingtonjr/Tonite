@@ -14,6 +14,9 @@ parser.add_argument("-l", "--location", nargs=1, type=str, default="boulder")
 parser.add_argument("-k", "--key", nargs=1, type=str, required=True)
 args = parser.parse_args()
 
+if args.location != parser.get_default("location"):
+    args.location = str(args.location[0])
+
 URL_PREFIX = "https://maps.googleapis.com/maps/api/place/textsearch/json?"
 
 keyfile = open(str(args.key[0]), 'r')
@@ -21,7 +24,7 @@ API_KEY = keyfile.read().rstrip('\n')
 
 INVALID = "INVALID_REQUEST"
 
-connection = MySQLdb.connect("localhost", "root", "INSERT PASSWORD HERE", "INSERT DB NAME HERE")
+connection = MySQLdb.connect("localhost", "root", "ejm6ZlBp2V5kuN5R!", "tonite")
 connection.set_character_set('utf8')
 cursor = connection.cursor()
 cursor.execute('SET NAMES utf8;')
