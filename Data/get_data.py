@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import MySQLdb
 import time
 import urllib
 
@@ -19,6 +20,13 @@ keyfile = open(str(args.key[0]), 'r')
 API_KEY = keyfile.read().rstrip('\n')
 
 INVALID = "INVALID_REQUEST"
+
+connection = MySQLdb.connect("localhost", "root", "INSERT PASSWORD HERE", "INSERT DB NAME HERE")
+connection.set_character_set('utf8')
+cursor = connection.cursor()
+cursor.execute('SET NAMES utf8;')
+cursor.execute('SET CHARACTER SET utf8;')
+cursor.execute('SET character_set_connection=utf8;')
 
 def Get_JSON(url):
     status = INVALID
@@ -49,12 +57,19 @@ def Get_Pages(url, max_depth):
 def main():
     for query in args.queries:
         query_pages = Get_Pages(URL_PREFIX + "query=" + args.location.replace(' ', '+') + query + "&key=" + API_KEY, 5)
-        count = 1
         for page in query_pages:
-            outfile_name = args.location + "_" + query + "_" + str(count) + ".json"
-            outfile = open(outfile_name, 'w')
-            outfile.write(json.dumps(page))
-            outfile.close()
-            count += 1
+            for result in page['results']:
+                name = result['name']
+                city = str(args.location)
+                lat = float(result['geometry']['location']['lat'])
+                lng = float(result['geometry']['location']['lng'])
+                try:
+                    rating = float(result['rating'])
+                except KeyError:
+                    rating = None
+                sql = "INSERT INTO " + query + " (name,city,lat,lng,rating) VALUES (%s,%s,%s,%s,%s)"
+                cursor.execute(sql,(name,city,lat,lng,rating))
+    connection.commit()
+    connection.close()
 
 main()
