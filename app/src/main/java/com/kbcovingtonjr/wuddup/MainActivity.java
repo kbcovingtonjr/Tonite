@@ -48,6 +48,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 // Other things to import
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import android.os.Handler;
@@ -77,6 +78,7 @@ public class MainActivity extends AppCompatActivity
     double initLat = 40.001575;
     double initLong = -105.262845;
     double radius = 5;
+    JSONObject data;
 
 
     private static final LatLngBounds ADELAIDE = new LatLngBounds(
@@ -144,18 +146,18 @@ public class MainActivity extends AppCompatActivity
 
 
         // Create user event in new activity
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Add an event", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-
-                Intent intent = new Intent(MainActivity.this, UserAddEvent.class);
-                startActivity(intent);
-
-            }
-        });
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, "Add an event", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//
+//                Intent intent = new Intent(MainActivity.this, UserAddEvent.class);
+//                startActivity(intent);
+//
+//            }
+//        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -252,13 +254,7 @@ public class MainActivity extends AppCompatActivity
         String provider = service.getBestProvider(criteria, false);
 //        Location location = service.getLastKnownLocation(provider);
         LatLng userLocation = new LatLng(location.getLatitude(),location.getLongitude());
-
-//        if ( ContextCompat.checkSelfPermission( this, android.Manifest.permission.ACCESS_COARSE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
-//
-//            ActivityCompat.requestPermissions( this, new String[] {  android.Manifest.permission.ACCESS_COARSE_LOCATION  },
-//                    LOCATION_SERVICE.MY_PERMISSION_ACCESS_COURSE_LOCATION );
-//        }
-
+        
         if ( Build.VERSION.SDK_INT >= 23 &&
                 ContextCompat.checkSelfPermission( MainActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission( MainActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -357,8 +353,9 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onResponse(JSONObject response) {
                         //mTxtDisplay.setText("Response: " + response.toString());
-                    Toast.makeText(MainActivity.this, response.toString(), Toast.LENGTH_LONG).show();
-
+                        //Toast.makeText(MainActivity.this, response.toString(), Toast.LENGTH_LONG).show();
+                        MainActivity.this.data = response;
+                        displayData(response);
                     }
                 }, new Response.ErrorListener() {
 
@@ -417,6 +414,8 @@ public class MainActivity extends AppCompatActivity
 
         // Add initial pins
 //        showPins();
+//        Toast.makeText(MainActivity.this, data.toString(), Toast.LENGTH_LONG).show();
+
 
     }
 
@@ -524,10 +523,10 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
-    private void dropPin(double coords[]) {
-        //mMap.addMarker(new MarkerOptions().position(new LatLng(coords[0], coords[1])).title("Marker"));
-        mMap.addMarker(new MarkerOptions().position(new LatLng(40,-105)).title("Marker"));
-    }
+//    private void dropPin(double coords[]) {
+//        //mMap.addMarker(new MarkerOptions().position(new LatLng(coords[0], coords[1])).title("Marker"));
+//        mMap.addMarker(new MarkerOptions().position(new LatLng(40,-105)).title("Marker"));
+//    }
 
     private void showPins() {
         mMap.addMarker(new MarkerOptions().position(new LatLng(locationData.get("Latitude"),
@@ -540,6 +539,44 @@ public class MainActivity extends AppCompatActivity
 //        mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
 //    }
 
+
+    private void dropPin(double lat, double lng) {
+        mMap.addMarker(new MarkerOptions().position(new LatLng(lat,lng)).title("Marker"));
+
+    }
+
+    public void displayData(JSONObject dataIN) {
+        //MainActivity.this.data = dataIN;
+        //Toast.makeText(MainActivity.this, data.toString(), Toast.LENGTH_LONG).show();
+
+        try {
+            int num = data.getJSONArray("activities").length();
+            for ( int i=0; i<=num; i++ ) {
+                Object dat = data.getJSONArray("activities").get(i);
+                double lat = new Double(((JSONObject) dat).get("lat").toString());
+                double lng = new Double(((JSONObject) dat).get("lng").toString());
+
+                dropPin(lat, lng);
+            }
+        }
+        catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+        try {
+            Object dat = dataIN.getJSONArray("activities").get(1);
+            dat = (JSONObject) dat;
+            double lat = new Double(((JSONObject) dat).get("lat").toString());
+            double lng = new Double(((JSONObject) dat).get("lng").toString());
+
+        }
+        catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        //mMap.addMarker(new MarkerOptions().position(new LatLng(40,-105)).title("Marker"));
+    }
 
 }
 
