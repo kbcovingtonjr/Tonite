@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CarpoolMag.net</title>
+  <link rel="stylesheet" href="https://bootswatch.com/yeti/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">CarpoolMag.net</a>
+      </div>
+
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="#">Home <span class="sr-only">(current)</span></a></li>
+          <li><a href="#">About</a></li>
+        </ul>
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+  </nav>
+
+
+  <div class="container">
+    <div class="alert alert-info"><span class="glyphicon glyphicon-cloud-download"></span> <b>Destination imported from Whaddup</b>
+      <p>Nearby travelers heading toward your destination are displayed below.</p></div>
+      Your destination:
+      <p id="dest" class="lead"></p>
+      <div id="results">
+      </div>
+
+      <h1 style="text-align: center"><i class="fa fa-circle-o-notch fa-spin" aria-hidden="true"></i> Searching...</h1><br>
+      <p>Looking for nearby drivers with destinations similar to yours.</p>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <script>
+    console.log(encodeURIComponent(JSON.stringify({'destination': '154 East Pearl St.'})))
+    var urljson = window.location.hash.substr(1);
+    var urldata = JSON.parse(decodeURIComponent(urljson));
+    $('#dest').text(urldata['destination']);
+    function refresh() {
+      $.post("http://192.241.255.49:8000/", function( data ) {
+        var json_data = JSON.parse(data);
+        $("#results").text('');
+        for (var i = 0; i < json_data.length; i++) {
+          var template = json_data[i];
+          var fit = "Okay fit.";
+          var fit_color = "green";
+          if (template.dist + template.dest_dist < 2) {
+            fit = "Good fit."
+            fit_color = "green";
+          } else if (template.dist + template.dest_dist < 5) {
+            fit = "Okay fit."
+            fit_color = "yellow";
+          } else {
+            fit = "Not recommended."
+            fit_color = "red";
+          }
+
+          if (template.visible) {
+            var result_blob = `<div class="panel panel-default">
+            <div class="panel-body">
+            <div class="row">
+            <div class="col-xs-6">
+            <img src="${template.photo}" class="img-responsive">
+            </div>
+            <div class="col-xs-6">
+            <h4>${template.name}</h4>
+            <p><b>${template.dist}</b> miles away</p>
+            <p>Destination within <b>${template.dest_dist}</b> miles of yours.</p>
+            <p style="color: ${fit_color};"><b>${fit}</b></p>
+            </div>
+            </div>
+            </div>
+            <div class="panel-footer">
+            <div class="row">
+            <div class="col-xs-12">
+            ${template.model}. <a type="button" href="sms:${template.phone}?body=CarpoolMagnet Request: Hi! Can I get a ride?" class="btn btn-sm btn-success pull-right">Contact</a>
+            </div>
+            </div>
+            </div>
+            </div>`;
+
+            $("#results").append(result_blob);
+
+          }
+        }
+      });
+    }
+
+    setInterval(refresh, 2000);
+    //console.log(encodeURIComponent(JSON.stringify({'destination': '2001 Amethyst Dr.'})))
+    </script>
+  </body>
+  </html>
