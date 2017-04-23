@@ -48,7 +48,7 @@ def Get_Pages(url, max_depth):
 
 def main():
     for query in args.queries:
-        query_pages = Get_Pages(URL_PREFIX + "query=" + query + "&key=" + API_KEY, 5)
+        query_pages = Get_Pages(URL_PREFIX + "query=" + args.location.replace(' ', '+') + query + "&key=" + API_KEY, 5)
         count = 1
         for page in query_pages:
             outfile_name = args.location + "_" + query + "_" + str(count) + ".json"
