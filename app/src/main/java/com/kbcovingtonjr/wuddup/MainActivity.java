@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.location.Address;
 import android.location.Criteria;
 import android.location.Geocoder;
@@ -72,12 +73,24 @@ public class MainActivity extends AppCompatActivity
         ActivityCompat.OnRequestPermissionsResultCallback,
         GoogleMap.OnCameraIdleListener {
 
+    /** Google maps object */
     private GoogleMap mMap;
+
+    /** URL to server */
     String url = "http://138.68.31.136/appdata/";
-    String user = "THE DUDE";
+
+    /** default username */
+    String user = "USERNAME";
+
+    // Hacky solution to manually setup initial coords
+    //TODO Fix initial GPS coord find
     double initLat = 40.001575;
     double initLong = -105.262845;
-    double radius = 5;
+
+    /** Default radius */
+//    double radius = 5;
+    private int radius;
+
     JSONObject data;
 
 
@@ -123,27 +136,25 @@ public class MainActivity extends AppCompatActivity
     //RequestQueue requestQueue = Volley.newRequestQueue(this);
 
 
-
-
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Resources res = getResources(); // Get resources
+
+        int[] radii = res.getIntArray(R.array.zoom_setting); // set default map zoom radii
+        radius = radii[0];
+
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
 
         // Get the SupportMapFragment and request notification
         // when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
-
-
-
 
         // Create user event in new activity
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -159,16 +170,17 @@ public class MainActivity extends AppCompatActivity
 //            }
 //        });
 
+        // Navigation drawer setup
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
-
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
     }
+
 
     @Override
     public void onBackPressed() {
@@ -180,12 +192,14 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -201,6 +215,7 @@ public class MainActivity extends AppCompatActivity
 
         return super.onOptionsItemSelected(item);
     }
+
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -242,6 +257,9 @@ public class MainActivity extends AppCompatActivity
         mMap.setOnMyLocationButtonClickListener(this);
         enableMyLocation();
         mMap.setOnCameraIdleListener(this);
+//        mMap.getUiSettings().setScrollGesturesEnabled(false); // if want to only restrict map scrolling
+        mMap.getUiSettings().setAllGesturesEnabled(false);
+
 
         //zoomToLocation(location);
 
@@ -306,7 +324,7 @@ public class MainActivity extends AppCompatActivity
         // Set initial viewing area
         mMap.setOnMyLocationChangeListener(myLocationChangeListener);
 
-        // TODO: totally not working...FIX!!!!
+        // TODO: not working...FIX!!!!
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
@@ -383,9 +401,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 //headers.put("Content-Type", "application/json");
-//            lat = getLatCoords();
-//            long = getLongCoords();
-                //hackyHeaders.put("MICHAEL", "FUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCK");
+                //hackyHeaders.put("MICHAEL", "OHDEAR");
                 return hackyHeaders;
             }
         };
@@ -395,7 +411,6 @@ public class MainActivity extends AppCompatActivity
 
         RequestQueue queue = MySingleton.getInstance(this.getApplicationContext()).
                 getRequestQueue();
-
 
 //        HashMap<String, Double[]> map = new HashMap<String, Double[]>();
 //        places.put("Bar", new Double[2] = {40.000089, -105.2575162});
@@ -415,7 +430,6 @@ public class MainActivity extends AppCompatActivity
         // Add initial pins
 //        showPins();
 //        Toast.makeText(MainActivity.this, data.toString(), Toast.LENGTH_LONG).show();
-
 
     }
 
@@ -465,7 +479,9 @@ public class MainActivity extends AppCompatActivity
         super.onResumeFragments();
         if (mPermissionDenied) {
             // Permission was not granted, display error dialog.
-            showMissingPermissionError();
+            PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
+                    Manifest.permission.ACCESS_FINE_LOCATION, true);
+//            showMissingPermissionError();
             mPermissionDenied = false;
 
         }
@@ -508,6 +524,7 @@ public class MainActivity extends AppCompatActivity
         mMap.setLatLngBoundsForCameraTarget(PACIFIC);
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(PACIFIC_CAMERA));
     }
+
     private GoogleMap.OnMyLocationChangeListener myLocationChangeListener = new GoogleMap.OnMyLocationChangeListener() {
         @Override
         public void onMyLocationChange(Location location) {
@@ -518,6 +535,8 @@ public class MainActivity extends AppCompatActivity
                 //Toast.makeText(MainActivity.this, lattt, Toast.LENGTH_LONG).show();
 
                 //mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 14.0f)); //to animate
+
+                //TODO: make zoom level a function of radii[]
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, 14.0f));
             }
         }
@@ -538,7 +557,6 @@ public class MainActivity extends AppCompatActivity
 //
 //        mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
 //    }
-
 
     private void dropPin(double lat, double lng) {
         mMap.addMarker(new MarkerOptions().position(new LatLng(lat,lng)).title("Marker"));
@@ -574,8 +592,6 @@ public class MainActivity extends AppCompatActivity
         catch (JSONException e) {
             e.printStackTrace();
         }
-
-        //mMap.addMarker(new MarkerOptions().position(new LatLng(40,-105)).title("Marker"));
     }
 
 }
